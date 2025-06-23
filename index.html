@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Juego de Selección Múltiple</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #E2E2E2;
+            color: #000000;
+            overflow: hidden;
+        }
+        .game-container {
+            background-color: #FFFFFF;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .question-container {
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+        }
+        .question-container.exit {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        h1 {
+            color: #000000;
+            margin-bottom: 20px;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .option-button {
+            background-color: #FFFFFF;
+            border: 2px solid #FFBC00;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 80%;
+            text-align: center;
+        }
+        .option-button:hover {
+            background-color: #FCD307;
+            transform: scale(1.02);
+        }
+        .option-button.selected {
+            background-color: #FCD307;
+        }
+        button {
+            background-color: #FCD307;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 10px 20px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FFBC00;
+        }
+        #feedback {
+            color: #000000;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .correct-word {
+            color: rgb(0, 190, 0);
+        }
+        .congratulations {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+            color: #000000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Juego de Selección Múltiple</h1>
+        <div id="questionContainer" class="question-container">
+            <div class="image-container">
+                <img id="questionImage" src="https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset" alt="Imagen de la pregunta" style="display: none;">
+            </div>
+            <p id="questionText">Pregunta: ¿Qué es amarillo y está en el cielo?</p>
+            <div class="options-container" id="optionsForm">
+                <!-- Las opciones se cargarán aquí dinámicamente -->
+            </div>
+            <button type="button" onclick="checkAnswers()">Enviar Respuestas</button>
+            <p id="feedback"></p>
+        </div>
+        <div id="congratulations" class="congratulations">
+            ¡Felicidades! Has resuelto todas las preguntas.
+        </div>
+    </div>
+    <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+        let questions = JSON.parse(localStorage.getItem('questions')) || [
+            {
+                questionText: "¿Qué es amarillo y está en el cielo?",
+                questionImage: "https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset",
+                options: [
+                    { text: "Luna", correct: false },
+                    { text: "Sol", correct: true },
+                    { text: "Estrella", correct: false }
+                ]
+            },
+            {
+                questionText: "¿Cuál es la capital de Francia?",
+                questionImage: "https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Paris",
+                options: [
+                    { text: "Londres", correct: false },
+                    { text: "París", correct: true },
+                    { text: "Berlín", correct: false }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let selectedOptions = [];
+        let confettiInterval;
+
+        function loadQuestion(index) {
+            const question = questions[index];
+            const questionContainer = document.getElementById('questionContainer');
+            const congratulationsDiv = document.getElementById('congratulations');
+            congratulationsDiv.style.display = 'none';
+            if (question) {
+                document.getElementById('questionText').textContent = 'Pregunta: ' + question.questionText;
+                document.getElementById('feedback').textContent = '';
+                selectedOptions = [];
+                if (question.questionImage) {
+                    document.getElementById('questionImage').src = question.questionImage;
+                    document.getElementById('questionImage').style.display = 'block';
+                } else {
+                    document.getElementById('questionImage').style.display = 'none';
+                }
+                const optionsContainer = document.getElementById('optionsForm');
+                optionsContainer.innerHTML = '';
+                question.options.forEach((option, i) => {
+                    const button = document.createElement('button');
+                    button.className = 'option-button';
+                    button.textContent = option.text;
+                    button.onclick = function() {
+                        if (selectedOptions.includes(option.text)) {
+                            selectedOptions = selectedOptions.filter(item => item !== option.text);
+                            button.classList.remove('selected');
+                        } else {
+                            selectedOptions.push(option.text);
+                            button.classList.add('selected');
+                        }
+                    };
+                    optionsContainer.appendChild(button);
+                });
+                questionContainer.classList.remove('exit');
+                void questionContainer.offsetWidth;
+            }
+        }
+
+        function checkAnswers() {
+            const question = questions[currentQuestionIndex];
+            const correctOptions = question.options.filter(option => option.correct).map(option => option.text);
+            if (JSON.stringify(selectedOptions.sort()) === JSON.stringify(correctOptions.sort())) {
+                document.getElementById('feedback').innerHTML = '<span class="correct-word">¡Correcto!</span>';
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < questions.length) {
+                        loadQuestion(currentQuestionIndex);
+                    } else {
+                        document.getElementById('feedback').textContent = '';
+                        document.getElementById('congratulations').style.display = 'block';
+                        startConfetti();
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('feedback').textContent = 'Incorrecto. Intenta de nuevo.';
+            }
+        }
+
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+            confettiInterval = setInterval(() => {
+                myConfetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }, 1000);
+        }
+
+        function stopConfetti() {
+            clearInterval(confettiInterval);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (questions.length > 0) {
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+    </script>
+</body>
+</html>
