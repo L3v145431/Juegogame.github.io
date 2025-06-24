@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Selección Múltiple</title>
+    <title>Multiple Choice Game</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -17,7 +17,6 @@
             padding: 20px;
             box-sizing: border-box;
         }
-
         .game-container {
             background-color: #FFFFFF;
             padding: 20px;
@@ -29,41 +28,34 @@
             position: relative;
             overflow: hidden;
         }
-
         .question-container {
             transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
         }
-
         .question-container.exit {
             transform: translateX(-100%);
             opacity: 0;
         }
-
         h1 {
             color: #000000;
             margin-bottom: 20px;
             font-size: 24px;
         }
-
         .image-container {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
         }
-
         .image-container img {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
         }
-
         .options-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
         }
-
         .option-button {
             background-color: #FFFFFF;
             border: 2px solid #FFBC00;
@@ -76,16 +68,13 @@
             text-align: center;
             font-size: 16px;
         }
-
         .option-button:hover {
             background-color: #FCD307;
             transform: scale(1.02);
         }
-
         .option-button.selected {
             background-color: #FCD307;
         }
-
         button {
             background-color: #FCD307;
             color: #000000;
@@ -98,22 +87,18 @@
             transition: background-color 0.3s;
             font-size: 16px;
         }
-
         button:hover {
             background-color: #FFBC00;
         }
-
         #feedback {
             color: #000000;
             font-weight: bold;
             margin-top: 20px;
             font-size: 18px;
         }
-
         .correct-word {
             color: rgb(0, 190, 0);
         }
-
         .congratulations {
             display: none;
             text-align: center;
@@ -122,7 +107,6 @@
             color: #000000;
             font-weight: bold;
         }
-
         @media (max-width: 480px) {
             h1 {
                 font-size: 20px;
@@ -136,20 +120,20 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Juego de Selección Múltiple</h1>
+        <h1>Multiple Choice Game</h1>
         <div id="questionContainer" class="question-container">
             <div class="image-container">
-                <img id="questionImage" src="https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset" alt="Imagen de la pregunta" style="display: none;">
+                <img id="questionImage" src="https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset" alt="Question Image" style="display: none;">
             </div>
-            <p id="questionText">Pregunta: ¿Qué es amarillo y está en el cielo?</p>
+            <p id="questionText">Question: What is yellow and in the sky?</p>
             <div class="options-container" id="optionsForm">
-                <!-- Las opciones se cargarán aquí dinámicamente -->
+                <!-- Options will be loaded here dynamically -->
             </div>
-            <button type="button" onclick="checkAnswers()">Enviar Respuestas</button>
+            <button type="button" onclick="checkAnswers()">Submit Answers</button>
             <p id="feedback"></p>
         </div>
         <div id="congratulations" class="congratulations">
-            ¡Felicidades! Has resuelto todas las preguntas.
+            Congratulations! You have solved all the questions.
         </div>
     </div>
     <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></canvas>
@@ -157,25 +141,24 @@
     <script>
         let questions = JSON.parse(localStorage.getItem('questions')) || [
             {
-                questionText: "¿Qué es amarillo y está en el cielo?",
+                questionText: "What is yellow and in the sky?",
                 questionImage: "https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset",
                 options: [
-                    { text: "Luna", correct: false },
-                    { text: "Sol", correct: true },
-                    { text: "Estrella", correct: false }
+                    { text: "Moon", correct: false },
+                    { text: "Sun", correct: true },
+                    { text: "Star", correct: false }
                 ]
             },
             {
-                questionText: "¿Cuál es la capital de Francia?",
+                questionText: "What is the capital of France?",
                 questionImage: "https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Paris",
                 options: [
-                    { text: "Londres", correct: false },
-                    { text: "París", correct: true },
-                    { text: "Berlín", correct: false }
+                    { text: "London", correct: false },
+                    { text: "Paris", correct: true },
+                    { text: "Berlin", correct: false }
                 ]
             }
         ];
-
         let currentQuestionIndex = 0;
         let selectedOptions = [];
         let confettiInterval;
@@ -187,7 +170,7 @@
             congratulationsDiv.style.display = 'none';
 
             if (question) {
-                document.getElementById('questionText').textContent = 'Pregunta: ' + question.questionText;
+                document.getElementById('questionText').textContent = 'Question: ' + question.questionText;
                 document.getElementById('feedback').textContent = '';
                 selectedOptions = [];
 
@@ -227,7 +210,7 @@
             const correctOptions = question.options.filter(option => option.correct).map(option => option.text);
 
             if (JSON.stringify(selectedOptions.sort()) === JSON.stringify(correctOptions.sort())) {
-                document.getElementById('feedback').innerHTML = '<span class="correct-word">¡Correcto!</span>';
+                document.getElementById('feedback').innerHTML = '<span class="correct-word">Correct!</span>';
                 setTimeout(() => {
                     currentQuestionIndex++;
                     if (currentQuestionIndex < questions.length) {
@@ -239,7 +222,7 @@
                     }
                 }, 1000);
             } else {
-                document.getElementById('feedback').textContent = 'Incorrecto. Intenta de nuevo.';
+                document.getElementById('feedback').textContent = 'Incorrect. Try again.';
             }
         }
 
@@ -253,7 +236,6 @@
                     origin: { y: 0.6 }
                 });
             }, 1000);
-
             setTimeout(stopConfetti, 5000);
         }
 
