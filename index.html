@@ -1,253 +1,295 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiple Choice Game</title>
+    <title>Juego de Emparejamiento</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            flex-direction: column;
+            background-color: #FFFFFF;
             margin: 0;
-            background-color: #E2E2E2;
-            color: #000000;
             padding: 20px;
+            min-height: 100vh;
             box-sizing: border-box;
         }
-        .game-container {
-            background-color: #FFFFFF;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            position: relative;
-            overflow: hidden;
-        }
-        .question-container {
-            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
-        }
-        .question-container.exit {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
+
         h1 {
-            color: #000000;
+            color: #FFBC00;
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            text-align: center;
         }
-        .image-container {
+
+        .game-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
         }
-        .image-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-        }
-        .options-container {
+
+        .column {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            width: 100%;
+            gap: 20px;
+            flex: 1;
         }
-        .option-button {
-            background-color: #FFFFFF;
-            border: 2px solid #FFBC00;
+
+        .item {
+            width: 80px;
+            height: 80px;
+            background-color: #E2E2E2;
             border-radius: 10px;
-            padding: 10px;
-            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            width: 80%;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, background-color 0.3s;
+            flex-direction: column;
+            margin: 0 auto;
+        }
+
+        .item:hover {
+            transform: scale(1.1);
+        }
+
+        .item img {
+            max-width: 60%;
+            max-height: 60%;
+        }
+
+        .item-text {
+            font-size: 0.8em;
+            margin-top: 5px;
             text-align: center;
-            font-size: 16px;
         }
-        .option-button:hover {
+
+        .line {
+            position: absolute;
             background-color: #FCD307;
-            transform: scale(1.02);
+            height: 4px;
+            z-index: -1;
+            transform-origin: 0 0;
         }
-        .option-button.selected {
-            background-color: #FCD307;
+
+        .matched {
+            background-color: #FFBC00;
+            color: white;
+            animation: bounce 0.5s;
         }
-        button {
-            background-color: #FCD307;
-            color: #000000;
+
+        .error:not(.matched) {
+            animation: shake 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            20%, 60% {
+                transform: translateX(-10px);
+            }
+            40%, 80% {
+                transform: translateX(10px);
+            }
+        }
+
+        #celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            color: white;
+            font-size: 3em;
+            flex-direction: column;
+        }
+
+        #play-again {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #FFBC00;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-weight: bold;
-            padding: 10px 20px;
-            margin-top: 10px;
-            transition: background-color 0.3s;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #FFBC00;
-        }
-        #feedback {
-            color: #000000;
-            font-weight: bold;
-            margin-top: 20px;
-            font-size: 18px;
-        }
-        .correct-word {
-            color: rgb(0, 190, 0);
-        }
-        .congratulations {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 24px;
-            color: #000000;
-            font-weight: bold;
-        }
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 20px;
-            }
-            .option-button, button {
-                font-size: 14px;
-                padding: 8px 16px;
-            }
         }
     </style>
 </head>
 <body>
+    <h1>¡Empareja las Imágenes!</h1>
     <div class="game-container">
-        <h1>Multiple Choice Game</h1>
-        <div id="questionContainer" class="question-container">
-            <div class="image-container">
-                <img id="questionImage" src="https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset" alt="Question Image" style="display: none;">
-            </div>
-            <p id="questionText">Question: What is yellow and in the sky?</p>
-            <div class="options-container" id="optionsForm">
-                <!-- Options will be loaded here dynamically -->
-            </div>
-            <button type="button" onclick="checkAnswers()">Submit Answers</button>
-            <p id="feedback"></p>
+        <div class="column" id="left-column">
+            <!-- Los elementos se cargarán dinámicamente -->
         </div>
-        <div id="congratulations" class="congratulations">
-            Congratulations! You have solved all the questions.
+        <div class="column" id="right-column">
+            <!-- Los elementos se cargarán dinámicamente -->
         </div>
     </div>
-    <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <div id="celebration">
+        ¡Felicidades! ¡Has ganado!
+        <button id="play-again">Jugar otra vez</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
     <script>
-        let questions = JSON.parse(localStorage.getItem('questions')) || [
-            {
-                questionText: "What is yellow and in the sky?",
-                questionImage: "https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Sunset",
-                options: [
-                    { text: "Moon", correct: false },
-                    { text: "Sun", correct: true },
-                    { text: "Star", correct: false }
-                ]
-            },
-            {
-                questionText: "What is the capital of France?",
-                questionImage: "https://via.placeholder.com/600x400/FFBC00/FFFFFF?text=Paris",
-                options: [
-                    { text: "London", correct: false },
-                    { text: "Paris", correct: true },
-                    { text: "Berlin", correct: false }
-                ]
+        function loadSettings() {
+            const bgColor = localStorage.getItem('bgColor') || '#FFFFFF';
+            const numSquares = parseInt(localStorage.getItem('numSquares')) || 3;
+
+            document.body.style.backgroundColor = bgColor;
+
+            const leftColumn = document.getElementById('left-column');
+            const rightColumn = document.getElementById('right-column');
+
+            leftColumn.innerHTML = '';
+            rightColumn.innerHTML = '';
+
+            const leftItems = [];
+            const rightItems = [];
+
+            for (let i = 1; i <= numSquares; i++) {
+                const imageSrc = localStorage.getItem(`image${i}`);
+                const text = localStorage.getItem(`text${i}`) || '';
+                leftItems.push({ value: i.toString(), image: imageSrc, text: text });
+                rightItems.push({ value: i.toString(), image: imageSrc, text: text });
             }
-        ];
-        let currentQuestionIndex = 0;
-        let selectedOptions = [];
-        let confettiInterval;
 
-        function loadQuestion(index) {
-            const question = questions[index];
-            const questionContainer = document.getElementById('questionContainer');
-            const congratulationsDiv = document.getElementById('congratulations');
-            congratulationsDiv.style.display = 'none';
+            rightItems.sort(() => Math.random() - 0.5);
 
-            if (question) {
-                document.getElementById('questionText').textContent = 'Question: ' + question.questionText;
-                document.getElementById('feedback').textContent = '';
-                selectedOptions = [];
+            leftItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'item';
+                itemElement.dataset.value = item.value;
+                itemElement.innerHTML = `
+                    ${item.image ? `<img src="${item.image}" alt="Item ${item.value}">` : ''}
+                    <div class="item-text">${item.text}</div>
+                `;
+                leftColumn.appendChild(itemElement);
+            });
 
-                if (question.questionImage) {
-                    document.getElementById('questionImage').src = question.questionImage;
-                    document.getElementById('questionImage').style.display = 'block';
-                } else {
-                    document.getElementById('questionImage').style.display = 'none';
+            rightItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'item';
+                itemElement.dataset.value = item.value;
+                itemElement.innerHTML = `
+                    ${item.image ? `<img src="${item.image}" alt="Item ${item.value}">` : ''}
+                    <div class="item-text">${item.text}</div>
+                `;
+                rightColumn.appendChild(itemElement);
+            });
+
+            setupGame();
+        }
+
+        function setupGame() {
+            const leftItems = document.querySelectorAll('#left-column .item');
+            const rightItems = document.querySelectorAll('#right-column .item');
+            let matchedPairs = 0;
+            let activeLines = [];
+
+            let activeLine = null;
+            let startItem = null;
+
+            leftItems.forEach(item => {
+                item.addEventListener('mousedown', function(e) {
+                    startItem = item;
+                    const rect = startItem.getBoundingClientRect();
+                    activeLine = document.createElement('div');
+                    activeLine.className = 'line';
+                    activeLine.style.left = (rect.left + rect.width / 2) + 'px';
+                    activeLine.style.top = (rect.top + rect.height / 2) + 'px';
+                    activeLine.style.width = '0px';
+                    document.body.appendChild(activeLine);
+                    e.preventDefault();
+                });
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (startItem && activeLine) {
+                    const startRect = startItem.getBoundingClientRect();
+                    const dx = e.clientX - (startRect.left + startRect.width / 2);
+                    const dy = e.clientY - (startRect.top + startRect.height / 2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    activeLine.style.width = distance + 'px';
+                    activeLine.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
                 }
+            });
 
-                const optionsContainer = document.getElementById('optionsForm');
-                optionsContainer.innerHTML = '';
-
-                question.options.forEach((option, i) => {
-                    const button = document.createElement('button');
-                    button.className = 'option-button';
-                    button.textContent = option.text;
-                    button.onclick = function() {
-                        if (selectedOptions.includes(option.text)) {
-                            selectedOptions = selectedOptions.filter(item => item !== option.text);
-                            button.classList.remove('selected');
+            rightItems.forEach(item => {
+                item.addEventListener('mouseup', function(e) {
+                    if (startItem && activeLine) {
+                        if (startItem.dataset.value === item.dataset.value) {
+                            startItem.classList.add('matched');
+                            item.classList.add('matched');
+                            matchedPairs++;
+                            activeLines.push(activeLine);
+                            if (matchedPairs === leftItems.length) {
+                                celebrate();
+                            }
                         } else {
-                            selectedOptions.push(option.text);
-                            button.classList.add('selected');
+                            startItem.classList.add('error');
+                            item.classList.add('error');
+                            setTimeout(() => {
+                                startItem.classList.remove('error');
+                                item.classList.remove('error');
+                            }, 500);
+                            activeLine.remove();
                         }
-                    };
-                    optionsContainer.appendChild(button);
-                });
-
-                questionContainer.classList.remove('exit');
-                void questionContainer.offsetWidth;
-            }
-        }
-
-        function checkAnswers() {
-            const question = questions[currentQuestionIndex];
-            const correctOptions = question.options.filter(option => option.correct).map(option => option.text);
-
-            if (JSON.stringify(selectedOptions.sort()) === JSON.stringify(correctOptions.sort())) {
-                document.getElementById('feedback').innerHTML = '<span class="correct-word">Correct!</span>';
-                setTimeout(() => {
-                    currentQuestionIndex++;
-                    if (currentQuestionIndex < questions.length) {
-                        loadQuestion(currentQuestionIndex);
-                    } else {
-                        document.getElementById('feedback').textContent = '';
-                        document.getElementById('congratulations').style.display = 'block';
-                        startConfetti();
+                        activeLine = null;
+                        startItem = null;
                     }
-                }, 1000);
-            } else {
-                document.getElementById('feedback').textContent = 'Incorrect. Try again.';
-            }
-        }
-
-        function startConfetti() {
-            const canvas = document.getElementById('confetti-canvas');
-            const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
-            confettiInterval = setInterval(() => {
-                myConfetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
                 });
-            }, 1000);
-            setTimeout(stopConfetti, 5000);
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (activeLine && !activeLines.includes(activeLine)) {
+                    activeLine.remove();
+                }
+                activeLine = null;
+                startItem = null;
+            });
         }
 
-        function stopConfetti() {
-            clearInterval(confettiInterval);
+        function celebrate() {
+            const celebration = document.getElementById('celebration');
+            celebration.style.display = 'flex';
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            document.getElementById('play-again').addEventListener('click', function() {
+                location.reload();
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            if (questions.length > 0) {
-                loadQuestion(currentQuestionIndex);
-            }
-        });
+        window.onload = loadSettings;
     </script>
 </body>
 </html>
